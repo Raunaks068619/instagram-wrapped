@@ -1,0 +1,14 @@
+{
+  "name": "instagram-wrapped",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "dev": "npm run dev -w backend & npm run dev -w frontend"
+  }
+}

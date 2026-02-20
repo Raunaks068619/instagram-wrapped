@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model app_users {
+  id            String   @id @default(cuid())
+  email         String?  @unique
+  name          String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  ig_accounts   ig_accounts[]
+  wrapped_reports wrapped_reports[]
+  oauth_sessions oauth_sessions[]
+}
+
+model ig_accounts {
+  id                  String   @id @default(cuid())
+  user_id             String
+  instagram_user_id   String   @unique
+  username            String
+  access_token        String?
+  long_lived_token    String?
+  token_expires_at    DateTime?
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+  user                app_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  ig_media            ig_media[]
+  ig_insights_daily   ig_insights_daily[]
+}
+
+model ig_media {
+  id                String   @id @default(cuid())
+  ig_account_id     String
+  media_id          String   @unique
+  caption           String?
+  media_type        String
+  media_url         String?
+  permalink         String?
+  timestamp         DateTime
+  like_count        Int      @default(0)
+  comments_count    Int      @default(0)
+  created_at        DateTime @default(now())
+  ig_account        ig_accounts @relation(fields: [ig_account_id], references: [id], onDelete: Cascade)
+}
+
+model ig_insights_daily {
+  id                String   @id @default(cuid())
+  ig_account_id     String
+  date              DateTime
+  impressions       Int      @default(0)
+  reach             Int      @default(0)
+  profile_views     Int      @default(0)
+  follower_count    Int      @default(0)
+  created_at        DateTime @default(now())
+  ig_account        ig_accounts @relation(fields: [ig_account_id], references: [id], onDelete: Cascade)
+
+  @@unique([ig_account_id, date])
+}
+
+model wrapped_reports {
+  id                  String   @id @default(cuid())
+  user_id             String
+  year                Int
+  title               String
+  summary             String
+  slides_json         Json
+  ai_image_ref        String?
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+  user                app_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, year])
+}
+
+model oauth_sessions {
+  id                  String   @id @default(cuid())
+  user_id             String?
+  state               String   @unique
+  code_verifier       String?
+  redirect_uri        String
+  created_at          DateTime @default(now())
+  consumed_at         DateTime?
+  user                app_users? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+}
