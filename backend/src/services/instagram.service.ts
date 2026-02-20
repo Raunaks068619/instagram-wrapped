@@ -11,7 +11,8 @@ export function getInstagramOAuthUrl(state: string) {
     response_type: 'code',
     state
   });
-  return `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`;
+  params.set('force_reauth', 'true');
+  return `https://www.instagram.com/oauth/authorize?${params.toString()}`;
 }
 
 export async function exchangeCodeForToken(code: string) {
