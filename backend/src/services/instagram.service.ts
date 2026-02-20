@@ -8,12 +8,25 @@ const instagramTokenEndpoint = 'https://api.instagram.com/oauth/access_token';
 async function checkResponse(res: Response, context: string) {
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
+    const apiError = errorData?.error || {};
+    const message = apiError?.message || res.statusText || 'Unknown error';
+
     console.error(`Instagram API Error [${context}]:`, {
       status: res.status,
       statusText: res.statusText,
-      error: errorData
+      message,
+      type: apiError?.type,
+      code: apiError?.code,
+      error_subcode: apiError?.error_subcode,
+      error_user_title: apiError?.error_user_title,
+      error_user_msg: apiError?.error_user_msg,
+      fbtrace_id: apiError?.fbtrace_id,
+      raw: errorData
     });
-    throw new Error(`Instagram API ${context} failed: ${errorData.error?.message || res.statusText || 'Unknown error'}`);
+
+    throw new Error(
+      `Instagram API ${context} failed: ${message}${apiError?.code ? ` (code ${apiError.code})` : ''}${apiError?.error_subcode ? ` (subcode ${apiError.error_subcode})` : ''}`
+    );
   }
   return res.json();
 }
