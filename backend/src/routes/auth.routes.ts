@@ -23,10 +23,14 @@ router.get('/instagram/callback', async (req, res, next) => {
     const { code, state } = req.query as { code?: string; state?: string };
     if (!code || !state) return res.status(400).json({ error: 'Missing code/state' });
 
+    // Some query parsers normalize '+' to space in query params.
+    // OAuth authorization codes can contain '+', so restore it before token exchange.
+    const normalizedCode = code.replace(/ /g, '+');
+
     const oauth = await prisma.oauth_sessions.findUnique({ where: { state } });
     if (!oauth || oauth.consumed_at) return res.status(400).json({ error: 'Invalid or consumed state' });
 
-    const token = await exchangeCodeForToken(code, oauth.redirect_uri);
+    const token = await exchangeCodeForToken(normalizedCode, oauth.redirect_uri);
     const longLived = await exchangeLongLivedToken(token.access_token);
     const profile = await fetchIgProfile(longLived.access_token || token.access_token);
 
