@@ -2,6 +2,7 @@ import { Router } from 'express';
 import crypto from 'node:crypto';
 import { prisma } from '../db/prisma.js';
 import { exchangeCodeForToken, exchangeLongLivedToken, fetchIgProfile, getInstagramOAuthUrl } from '../services/instagram.service.js';
+import { env } from '../config/env.js';
 
 const router = Router();
 
@@ -57,7 +58,7 @@ router.get('/instagram/callback', async (req, res, next) => {
       data: { consumed_at: new Date(), user_id: user.id }
     });
 
-    const redirect = new URL('/dashboard', req.protocol + '://' + req.get('host'));
+    const redirect = new URL('/dashboard', env.FRONTEND_URL);
     redirect.searchParams.set('userId', user.id);
     res.redirect(302, redirect.toString());
   } catch (e) {
