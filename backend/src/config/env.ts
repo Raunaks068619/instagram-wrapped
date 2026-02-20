@@ -1,7 +1,13 @@
 import dotenv from 'dotenv';
 import { z } from 'zod';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-dotenv.config({ path: '.env' });
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '../../.env') });
+
+console.log('Loading .env from:', path.join(__dirname, '../../.env'));
+console.log('Current CWD:', process.cwd());
 
 const envSchema = z.object({
   NODE_ENV: z.string().default('development'),

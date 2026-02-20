@@ -5,14 +5,16 @@ import { fetchIgInsights, fetchIgMedia, fetchIgProfile } from '../services/insta
 
 const router = Router();
 
-async function getPrimaryAccount() {
-  const account = await prisma.ig_accounts.findFirst({ orderBy: { created_at: 'asc' } });
-  return account;
+async function getAccountForUser(userId: string) {
+  return prisma.ig_accounts.findFirst({ where: { user_id: userId }, orderBy: { created_at: 'asc' } });
 }
 
-router.get('/profile', async (_req, res, next) => {
+router.get('/profile', async (req, res, next) => {
   try {
-    const account = await getPrimaryAccount();
+    const userId = (req as any).userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized. x-user-id header missing.' });
+
+    const account = await getAccountForUser(userId);
     if (!account) return res.status(404).json({ error: 'No Instagram account linked. Complete OAuth first.' });
     const profile = await fetchIgProfile(account.long_lived_token || account.access_token || '');
     res.json({ account, profile });
@@ -21,9 +23,12 @@ router.get('/profile', async (_req, res, next) => {
   }
 });
 
-router.get('/media', async (_req, res, next) => {
+router.get('/media', async (req, res, next) => {
   try {
-    const account = await getPrimaryAccount();
+    const userId = (req as any).userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized.' });
+
+    const account = await getAccountForUser(userId);
     if (!account) return res.status(404).json({ error: 'No Instagram account linked.' });
     const mediaResponse = await fetchIgMedia(account.long_lived_token || account.access_token || '');
     const media = mediaResponse.data || [];
@@ -62,7 +67,10 @@ router.post('/insights/sync', body('days').optional().isInt({ min: 7, max: 365 }
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const account = await getPrimaryAccount();
+    const userId = (req as any).userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized.' });
+
+    const account = await getAccountForUser(userId);
     if (!account) return res.status(404).json({ error: 'No Instagram account linked.' });
 
     const rows = await fetchIgInsights(account.long_lived_token || account.access_token || '');

@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.routes.js';
 import instagramRoutes from './routes/instagram.routes.js';
 import wrappedRoutes from './routes/wrapped.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { authMiddleware } from './middleware/auth.js';
 import { prisma } from './db/prisma.js';
 
 export const app = express();
@@ -12,6 +13,7 @@ export const app = express();
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
+app.use(authMiddleware);
 
 app.get('/health', async (_req, res) => {
   try {

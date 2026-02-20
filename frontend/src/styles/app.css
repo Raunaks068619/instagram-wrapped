@@ -1,12 +1,261 @@
-body { font-family: Inter, system-ui, sans-serif; margin: 0; background: #0d1224; color: #ecf1ff; }
-.container { max-width: 980px; margin: 0 auto; padding: 24px; }
-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-nav a { color: #a7b8ff; margin-left: 16px; text-decoration: none; }
-.card { background: #171e36; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
-button { border: 0; border-radius: 10px; padding: 10px 14px; margin-right: 8px; cursor: pointer; background: #5168ff; color: white; }
-input { border-radius: 8px; border: 1px solid #30407a; background: #0d1224; color: #fff; padding: 9px 10px; }
-.error { color: #ff9ba0; }
-.hero { width: 100%; border-radius: 12px; margin: 16px 0; }
-.slides { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-.slide { background: linear-gradient(160deg, #2f3f84, #7d4b9f); padding: 14px; border-radius: 12px; min-height: 130px; }
-.row { display: flex; gap: 8px; margin-bottom: 12px; }
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-color: #000000;
+    --sidebar-bg: #000000;
+    --sidebar-width: 245px;
+    --sidebar-border: 1px solid #262626;
+    --card-bg: #121212;
+    --primary-color: #0095f6;
+    --secondary-color: #8e8e8e;
+    --accent-color: #ed4956;
+    --text-primary: #f5f5f5;
+    --text-secondary: #a8a8a8;
+    --border-color: #262626;
+    --nav-height: 60px;
+    --transition-speed: 0.2s;
+    --ease-out: cubic-bezier(0.17, 0.67, 0.83, 0.67);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.layout-root {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Styling (Desktop) */
+.sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: var(--sidebar-bg);
+    border-right: var(--sidebar-border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 12px;
+    z-index: 1000;
+    transition: width var(--transition-speed);
+}
+
+.sidebar-header {
+    padding: 25px 12px;
+    margin-bottom: 20px;
+}
+
+.sidebar-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-family: 'Fira Sans', sans-serif;
+    /* Keep the logo font */
+    background: linear-gradient(to right, #f9ce34, #ee2a7b, #6228d7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sidebar-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.sidebar-links a,
+.logout-btn {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 400;
+    transition: background var(--transition-speed);
+}
+
+.sidebar-links a:hover,
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-links a.active {
+    font-weight: 700;
+}
+
+.logout-btn {
+    background: none;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    margin-top: auto;
+    color: var(--accent-color);
+    font-family: inherit;
+    box-shadow: none;
+}
+
+/* Content Area */
+.content-area {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    max-width: 935px;
+    /* Instagram's standard content width */
+    width: 100%;
+}
+
+/* Base Components Refinement */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 32px;
+}
+
+button:not(.logout-btn) {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+button:not(.logout-btn):hover:not(:disabled) {
+    opacity: 0.8;
+}
+
+input {
+    background: #262626;
+    border: 1px solid #363636;
+    color: white;
+    padding: 10px 12px;
+    border-radius: 8px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1023px) {
+    .sidebar {
+        height: var(--nav-height);
+        width: 100%;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        border-right: none;
+        border-top: var(--sidebar-border);
+        flex-direction: row;
+        padding: 0;
+        justify-content: space-around;
+        align-items: center;
+    }
+
+    .sidebar-header {
+        display: none;
+        /* Hide logo in bottom nav */
+    }
+
+    .sidebar-links {
+        flex-direction: row;
+        width: 100%;
+        gap: 0;
+        justify-content: space-around;
+    }
+
+    .sidebar-links a,
+    .logout-btn {
+        padding: 15px;
+        font-size: 0.9rem;
+        flex-direction: column;
+        gap: 4px;
+        margin: 0;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .content-area {
+        margin-left: 0;
+        margin-bottom: var(--nav-height);
+        padding: 20px 12px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .sidebar-links a span,
+    .logout-btn span {
+        display: none;
+        /* Only icons would be better here, but using text for now */
+    }
+}
+
+/* Slides and Stats from original CSS, refined */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.stat-card {
+    background: #121212;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.error {
+    color: var(--accent-color);
+    background: rgba(237, 73, 86, 0.1);
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}

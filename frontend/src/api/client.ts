@@ -1,8 +1,23 @@
 const API = import.meta.env.VITE_API_BASE_URL ?? '';
 
+const SESSION_KEY = 'ig_wrapped_user_id';
+
+export const session = {
+  getUserId: () => localStorage.getItem(SESSION_KEY),
+  setUserId: (id: string) => localStorage.setItem(SESSION_KEY, id),
+  clear: () => localStorage.removeItem(SESSION_KEY)
+};
+
 async function req(path: string, init?: RequestInit) {
+  const userId = session.getUserId();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+  if (userId) {
+    headers['x-user-id'] = userId;
+  }
+
   const res = await fetch(`${API}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     ...init
   });
   if (!res.ok) throw new Error(`Request failed: ${res.status}`);

@@ -11,10 +11,13 @@ router.post('/generate', body('year').isInt({ min: 2020, max: 2100 }), async (re
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const year = Number(req.body.year);
-    const account = await prisma.ig_accounts.findFirst({ orderBy: { created_at: 'asc' } });
+    const userId = (req as any).userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized.' });
+
+    const account = await prisma.ig_accounts.findFirst({ where: { user_id: userId }, orderBy: { created_at: 'asc' } });
     if (!account) return res.status(404).json({ error: 'No Instagram account linked.' });
 
-    const user = await prisma.app_users.findUnique({ where: { id: account.user_id } });
+    const user = await prisma.app_users.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ error: 'No app user found.' });
 
     const media = await prisma.ig_media.findMany({ where: { ig_account_id: account.id } });
@@ -66,11 +69,11 @@ router.get('/:year', param('year').isInt({ min: 2020, max: 2100 }), async (req, 
 
     const yearParam = req.params?.year;
     const year = Number(yearParam);
-    const account = await prisma.ig_accounts.findFirst({ orderBy: { created_at: 'asc' } });
-    if (!account) return res.status(404).json({ error: 'No Instagram account linked.' });
+    const userId = (req as any).userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized.' });
 
     const report = await prisma.wrapped_reports.findFirst({
-      where: { user_id: account.user_id, year }
+      where: { user_id: userId, year }
     });
 
     if (!report) return res.status(404).json({ error: 'Wrapped report not found for year' });

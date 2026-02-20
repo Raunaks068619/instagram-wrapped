@@ -19,11 +19,25 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="card">
-      <h2>Login with Instagram</h2>
-      <p>Connect your Instagram account to generate a personalized Wrapped report.</p>
-      <button onClick={connectInstagram} disabled={loading}>{loading ? 'Redirecting...' : 'Continue with Instagram'}</button>
-      {error && <p className="error">{error}</p>}
-    </section>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+      <section className="card" style={{ maxWidth: '400px', textAlign: 'center' }}>
+        <div style={{ fontSize: '3rem', marginBottom: '20px' }}>📸</div>
+        <h2>Welcome Back</h2>
+        <p>Ready to see your year in review? Connect your Instagram to get started.</p>
+        <div style={{ marginTop: '32px' }}>
+          <button 
+            onClick={connectInstagram} 
+            disabled={loading}
+            style={{ width: '100%', padding: '16px' }}
+          >
+            {loading ? 'Redirecting to Instagram...' : 'Continue with Instagram'}
+          </button>
+        </div>
+        {error && <p className="error">{error}</p>}
+        <p style={{ fontSize: '0.8rem', marginTop: '24px', opacity: 0.6 }}>
+          We only sync your public media and basic insights. Your data is safe with us.
+        </p>
+      </section>
+    </div>
   );
 }
