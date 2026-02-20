@@ -10,7 +10,7 @@ router.get('/instagram/start', async (_req, res, next) => {
   try {
     const state = crypto.randomUUID();
     await prisma.oauth_sessions.create({
-      data: { state, redirect_uri: '/auth/instagram/callback' }
+      data: { state, redirect_uri: env.INSTAGRAM_REDIRECT_URI }
     });
     res.json({ authUrl: getInstagramOAuthUrl(state), state });
   } catch (e) {
@@ -26,22 +26,29 @@ router.get('/instagram/callback', async (req, res, next) => {
     const oauth = await prisma.oauth_sessions.findUnique({ where: { state } });
     if (!oauth || oauth.consumed_at) return res.status(400).json({ error: 'Invalid or consumed state' });
 
-    const token = await exchangeCodeForToken(code);
+    const token = await exchangeCodeForToken(code, oauth.redirect_uri);
     const longLived = await exchangeLongLivedToken(token.access_token);
     const profile = await fetchIgProfile(longLived.access_token || token.access_token);
 
+    if (!profile.id) {
+      console.error('Instagram profile missing ID:', profile);
+      throw new Error('Failed to retrieve Instagram profile ID.');
+    }
+
+    const username = profile.username || 'user';
+
     const user = await prisma.app_users.upsert({
-      where: { email: `${profile.username || 'ig-user'}@local.mock` },
-      create: { email: `${profile.username || 'ig-user'}@local.mock`, name: profile.username || 'Instagram User' },
-      update: { name: profile.username || 'Instagram User' }
+      where: { email: `${username}@local.mock` },
+      create: { email: `${username}@local.mock`, name: username },
+      update: { name: username }
     });
 
     await prisma.ig_accounts.upsert({
-      where: { instagram_user_id: profile.id || 'mock-ig-001' },
+      where: { instagram_user_id: profile.id },
       create: {
         user_id: user.id,
-        instagram_user_id: profile.id || 'mock-ig-001',
-        username: profile.username || 'mock.creator',
+        instagram_user_id: profile.id,
+        username: username,
         access_token: token.access_token,
         long_lived_token: longLived.access_token,
         token_expires_at: new Date(Date.now() + (longLived.expires_in || 3600) * 1000)
@@ -49,7 +56,7 @@ router.get('/instagram/callback', async (req, res, next) => {
       update: {
         access_token: token.access_token,
         long_lived_token: longLived.access_token,
-        username: profile.username || 'mock.creator'
+        username: username
       }
     });
 

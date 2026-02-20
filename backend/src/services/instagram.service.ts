@@ -8,8 +8,8 @@ const instagramTokenEndpoint = 'https://api.instagram.com/oauth/access_token';
 async function checkResponse(res: Response, context: string) {
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    const apiError = errorData?.error || {};
-    const message = apiError?.message || res.statusText || 'Unknown error';
+    const apiError = errorData?.error || errorData || {};
+    const message = apiError?.message || apiError?.error_message || res.statusText || 'Unknown error';
 
     console.error(`Instagram API Error [${context}]:`, {
       status: res.status,
@@ -45,7 +45,7 @@ export function getInstagramOAuthUrl(state: string) {
   return url;
 }
 
-export async function exchangeCodeForToken(code: string) {
+export async function exchangeCodeForToken(code: string, redirectUri?: string) {
   if (env.MOCK_MODE) {
     return { access_token: `mock-access-${code}`, token_type: 'bearer', expires_in: 3600 };
   }
@@ -57,7 +57,7 @@ export async function exchangeCodeForToken(code: string) {
       client_id: env.INSTAGRAM_CLIENT_ID || '',
       client_secret: env.INSTAGRAM_CLIENT_SECRET || '',
       grant_type: 'authorization_code',
-      redirect_uri: env.INSTAGRAM_REDIRECT_URI,
+      redirect_uri: redirectUri || env.INSTAGRAM_REDIRECT_URI,
       code
     })
   });
