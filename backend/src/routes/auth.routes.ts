@@ -55,12 +55,22 @@ router.get('/instagram/callback', async (req, res, next) => {
         username: username,
         access_token: token.access_token,
         long_lived_token: longLived.access_token,
-        token_expires_at: new Date(Date.now() + (longLived.expires_in || 3600) * 1000)
+        token_expires_at: new Date(Date.now() + (longLived.expires_in || 3600) * 1000),
+        biography: profile.biography || null,
+        profile_picture_url: profile.profile_picture_url || null,
+        website: profile.website || null,
+        followers_count: profile.followers_count || 0,
+        follows_count: profile.follows_count || 0
       },
       update: {
         access_token: token.access_token,
         long_lived_token: longLived.access_token,
-        username: username
+        username: username,
+        biography: profile.biography || null,
+        profile_picture_url: profile.profile_picture_url || null,
+        website: profile.website || null,
+        followers_count: profile.followers_count || 0,
+        follows_count: profile.follows_count || 0
       }
     });
 
@@ -72,6 +82,67 @@ router.get('/instagram/callback', async (req, res, next) => {
     const redirect = new URL('/dashboard', env.FRONTEND_URL);
     redirect.searchParams.set('userId', user.id);
     res.redirect(302, redirect.toString());
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ──── DEV-ONLY: Seed account with a tester access token ──────────────────────
+router.post('/instagram/dev-login', async (req, res, next) => {
+  try {
+    if (env.NODE_ENV === 'production') {
+      return res.status(403).json({ error: 'Dev-only endpoint' });
+    }
+
+    const { access_token } = req.body;
+    if (!access_token) return res.status(400).json({ error: 'access_token required' });
+
+    // Use the token to fetch the profile
+    const profile = await fetchIgProfile(access_token);
+
+    if (!profile.id) {
+      console.error('Instagram profile missing ID:', profile);
+      return res.status(400).json({ error: 'Token did not return a valid profile', details: profile });
+    }
+
+    const username = profile.username || 'tester';
+
+    const user = await prisma.app_users.upsert({
+      where: { email: `${username}@local.mock` },
+      create: { email: `${username}@local.mock`, name: username },
+      update: { name: username }
+    });
+
+    await prisma.ig_accounts.upsert({
+      where: { instagram_user_id: profile.id },
+      create: {
+        user_id: user.id,
+        instagram_user_id: profile.id,
+        username: username,
+        access_token: access_token,
+        long_lived_token: access_token,
+        token_expires_at: new Date(Date.now() + 60 * 24 * 3600 * 1000), // 60 days
+        biography: profile.biography || null,
+        profile_picture_url: profile.profile_picture_url || null,
+        website: profile.website || null,
+        followers_count: profile.followers_count || 0,
+        follows_count: profile.follows_count || 0
+      },
+      update: {
+        access_token: access_token,
+        long_lived_token: access_token,
+        token_expires_at: new Date(Date.now() + 60 * 24 * 3600 * 1000),
+        username: username,
+        biography: profile.biography || null,
+        profile_picture_url: profile.profile_picture_url || null,
+        website: profile.website || null,
+        followers_count: profile.followers_count || 0,
+        follows_count: profile.follows_count || 0
+      }
+    });
+
+    console.log(`✅ Dev login: ${username} (${profile.id}) -> user ${user.id}`);
+    res.json({ success: true, userId: user.id, username });
   } catch (e) {
     next(e);
   }

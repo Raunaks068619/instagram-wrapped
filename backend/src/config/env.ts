@@ -20,7 +20,7 @@ const envSchema = z.object({
   INSTAGRAM_CLIENT_ID: z.string().optional(),
   INSTAGRAM_CLIENT_SECRET: z.string().optional(),
   INSTAGRAM_REDIRECT_URI: z.string().default('http://localhost:4000/auth/instagram/callback'),
-  INSTAGRAM_SCOPES: z.string().default('instagram_basic,instagram_manage_insights,pages_show_list'),
+  INSTAGRAM_SCOPES: z.string().default('instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish,instagram_business_manage_insights,pages_show_list,pages_read_engagement,email,instagram_manage_insights,instagram_manage_comments'),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_IMAGE_MODEL: z.string().default('gpt-image-1')
 });

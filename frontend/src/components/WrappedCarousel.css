@@ -1,0 +1,246 @@
+.wc-root {
+    max-width: 75vw;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+/* ---- Progress bar ---- */
+.wc-progress {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 16px;
+}
+
+.wc-seg {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.wc-seg-done {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.wc-seg-now {
+    background: #fff;
+}
+
+/* ---- Slider area ---- */
+.wc-slider-area {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.wc-swiper-wrap {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* ---- Arrows ---- */
+.wc-arrow {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 22px;
+    line-height: 34px;
+    text-align: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    user-select: none;
+    z-index: 10;
+    transition: background 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.wc-arrow:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.wc-arrow-l {
+    margin-right: 8px;
+}
+
+.wc-arrow-r {
+    margin-left: 8px;
+}
+
+/* ---- Card Wrapper (around each HTML card) ---- */
+.wc-card-wrapper {
+    position: relative;
+    border-radius: 20px;
+    max-height: 624px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    opacity: 0.5;
+    transform: scale(0.93);
+    transition: opacity 0.35s, transform 0.35s cubic-bezier(.25, .46, .45, .94), box-shadow 0.35s;
+    overflow: hidden;
+}
+
+.wc-card-wrapper .wcard {
+    border-radius: 0;
+    max-height: 624px;
+}
+
+.wc-card-wrapper.wc-card-on {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Footer overlay inside card wrapper */
+.wcard-footer-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    z-index: 5;
+}
+
+.wcard-dl-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.5);
+    transition: color 0.2s;
+    flex-shrink: 0;
+}
+
+.wcard-dl-icon:hover {
+    color: #fff;
+}
+
+.wcard-share-btn-overlay {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 0;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.wcard-share-btn-overlay:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+/* ---- Counter + download ---- */
+.wc-counter {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.7rem;
+    margin-top: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+}
+
+.wc-dl-row {
+    text-align: center;
+    margin-top: 16px;
+}
+
+.wc-dl-all {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+    padding: 8px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.wc-dl-all:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* ---- Swiper overrides ---- */
+.wc-swiper-wrap .swiper {
+    overflow: visible;
+}
+
+.wc-swiper-wrap .swiper-slide {
+    height: auto;
+}
+
+/* ---- Mobile Responsive ---- */
+@media (max-width: 640px) {
+    .wc-root {
+        margin: 0 auto;
+        max-width: 90vw;
+    }
+
+    .wc-arrow {
+        width: 28px;
+        height: 28px;
+        font-size: 18px;
+        line-height: 26px;
+    }
+
+    .wc-arrow-l {
+        margin-right: 4px;
+    }
+
+    .wc-arrow-r {
+        margin-left: 4px;
+    }
+
+    .wc-card-wrapper {
+        max-height: 552px;
+        border-radius: 16px;
+    }
+
+    .wc-card-wrapper .wcard {
+        max-height: 552px;
+    }
+
+    .wcard-footer-overlay {
+        padding: 8px 12px;
+    }
+
+    .wcard-share-btn-overlay {
+        padding: 8px 0;
+        font-size: 0.72rem;
+    }
+
+    .wc-progress {
+        gap: 2px;
+    }
+}
+
+@media (max-width: 400px) {
+    .wc-arrow {
+        display: none;
+    }
+
+    .wc-card-wrapper {
+        max-height: 504px;
+    }
+
+    .wc-card-wrapper .wcard {
+        max-height: 504px;
+    }
+}

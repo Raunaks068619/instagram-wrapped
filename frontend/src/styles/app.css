@@ -125,9 +125,9 @@ h4 {
 }
 
 .container {
-    max-width: 935px;
-    /* Instagram's standard content width */
+    max-width: min(100%, 1200px);
     width: 100%;
+    margin: 0 auto;
 }
 
 /* Base Components Refinement */

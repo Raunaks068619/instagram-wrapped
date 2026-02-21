@@ -19,18 +19,25 @@ model app_users {
 }
 
 model ig_accounts {
-  id                  String   @id @default(cuid())
-  user_id             String
-  instagram_user_id   String   @unique
-  username            String
-  access_token        String?
-  long_lived_token    String?
-  token_expires_at    DateTime?
-  created_at          DateTime @default(now())
-  updated_at          DateTime @updatedAt
-  user                app_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  ig_media            ig_media[]
-  ig_insights_daily   ig_insights_daily[]
+  id                    String   @id @default(cuid())
+  user_id               String
+  instagram_user_id     String   @unique
+  username              String
+  access_token          String?
+  long_lived_token      String?
+  token_expires_at      DateTime?
+  biography             String?
+  profile_picture_url   String?
+  website               String?
+  followers_count       Int      @default(0)
+  follows_count         Int      @default(0)
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  user                  app_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  ig_media              ig_media[]
+  ig_insights_daily     ig_insights_daily[]
+  ig_stories            ig_stories[]
+  ig_audience_demographics ig_audience_demographics[]
 }
 
 model ig_media {
@@ -40,10 +47,16 @@ model ig_media {
   caption           String?
   media_type        String
   media_url         String?
+  thumbnail_url     String?
   permalink         String?
   timestamp         DateTime
   like_count        Int      @default(0)
   comments_count    Int      @default(0)
+  impressions       Int      @default(0)
+  reach             Int      @default(0)
+  saved             Int      @default(0)
+  shares            Int      @default(0)
+  video_views       Int      @default(0)
   created_at        DateTime @default(now())
   ig_account        ig_accounts @relation(fields: [ig_account_id], references: [id], onDelete: Cascade)
 }
@@ -56,10 +69,39 @@ model ig_insights_daily {
   reach             Int      @default(0)
   profile_views     Int      @default(0)
   follower_count    Int      @default(0)
+  website_clicks    Int      @default(0)
+  email_contacts    Int      @default(0)
   created_at        DateTime @default(now())
   ig_account        ig_accounts @relation(fields: [ig_account_id], references: [id], onDelete: Cascade)
 
   @@unique([ig_account_id, date])
+}
+
+model ig_stories {
+  id                String   @id @default(cuid())
+  ig_account_id     String
+  story_id          String   @unique
+  media_type        String
+  media_url         String?
+  timestamp         DateTime
+  impressions       Int      @default(0)
+  reach             Int      @default(0)
+  replies           Int      @default(0)
+  exits             Int      @default(0)
+  created_at        DateTime @default(now())
+  ig_account        ig_accounts @relation(fields: [ig_account_id], references: [id], onDelete: Cascade)
+}
+
+model ig_audience_demographics {
+  id                String   @id @default(cuid())
+  ig_account_id     String
+  dimension         String   // 'city', 'country', 'age', 'gender'
+  key               String   // e.g. 'Mumbai, Maharashtra', 'IN', '18-24', 'M'
+  value             Int      @default(0)
+  snapshot_date     DateTime @default(now())
+  ig_account        ig_accounts @relation(fields: [ig_account_id], references: [id], onDelete: Cascade)
+
+  @@unique([ig_account_id, dimension, key])
 }
 
 model wrapped_reports {

@@ -1,5 +1,5 @@
 import { env } from '../config/env.js';
-import { mockInsights, mockMedia, mockProfile } from './mockData.service.js';
+import { mockInsights, mockMedia, mockProfile, mockStories, mockMediaInsights, mockAudienceDemographics } from './mockData.service.js';
 
 const graphBase = 'https://graph.instagram.com';
 const instagramAuthorizeBase = 'https://www.instagram.com/oauth/authorize';
@@ -74,20 +74,125 @@ export async function exchangeLongLivedToken(shortToken: string) {
   return checkResponse(res, 'exchangeLongLivedToken');
 }
 
+// ─── Custom Graph API Payload Proxy ───────────────────────────────────────────
+export async function fetchCustomGraphApi(_token: string, endpoint: string) {
+  // strip leading slash if present
+  const path = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  // If user passes query params, we need to append access_token appropriately
+  const separator = path.includes('?') ? '&' : '?';
+  const res = await fetch(`${graphBase}/${path}${separator}access_token=${_token}`);
+  return checkResponse(res, `fetchCustomGraphApi(${endpoint})`);
+}
+
+// ─── Profile ──────────────────────────────────────────────────────────────────
 export async function fetchIgProfile(_token: string) {
   if (env.MOCK_MODE) return mockProfile();
-  const res = await fetch(`${graphBase}/me?fields=id,username,account_type,media_count&access_token=${_token}`);
+  const fields = 'id,username,account_type,media_count,followers_count,follows_count,biography,profile_picture_url,website,name';
+  const res = await fetch(`${graphBase}/me?fields=${fields}&access_token=${_token}`);
   return checkResponse(res, 'fetchIgProfile');
 }
 
+// ─── Media ────────────────────────────────────────────────────────────────────
 export async function fetchIgMedia(_token: string) {
   if (env.MOCK_MODE) return { data: mockMedia() };
-  const res = await fetch(`${graphBase}/me/media?fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count&access_token=${_token}`);
+  const fields = 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count';
+  const res = await fetch(`${graphBase}/me/media?fields=${fields}&access_token=${_token}`);
   return checkResponse(res, 'fetchIgMedia');
 }
 
-export async function fetchIgInsights(_token: string) {
-  if (env.MOCK_MODE) return mockInsights();
-  // TODO: Implement actual Instagram Graph API insights call here
-  return []; // Return empty instead of mock if not in mock mode
+// ─── Per-Media Insights ───────────────────────────────────────────────────────
+export async function fetchMediaInsights(_token: string, mediaId: string, mediaType: string) {
+  if (env.MOCK_MODE) return mockMediaInsights(mediaId, mediaType);
+
+  // Instagram API v21+ uses different metrics per media type
+  let metrics: string;
+  if (mediaType === 'REEL') {
+    metrics = 'reach,saved,shares,comments,likes';
+  } else if (mediaType === 'VIDEO') {
+    metrics = 'reach,saved,shares';
+  } else if (mediaType === 'CAROUSEL_ALBUM') {
+    metrics = 'reach,saved,shares';
+  } else {
+    // IMAGE
+    metrics = 'reach,saved,shares,likes';
+  }
+
+  const res = await fetch(`${graphBase}/${mediaId}/insights?metric=${metrics}&access_token=${_token}`);
+  return checkResponse(res, `fetchMediaInsights(${mediaId})`);
+}
+
+// ─── Stories ──────────────────────────────────────────────────────────────────
+export async function fetchIgStories(_token: string) {
+  if (env.MOCK_MODE) return { data: mockStories() };
+  const fields = 'id,media_type,media_url,timestamp';
+  const res = await fetch(`${graphBase}/me/stories?fields=${fields}&access_token=${_token}`);
+  return checkResponse(res, 'fetchIgStories');
+}
+
+// ─── Per-Story Insights ───────────────────────────────────────────────────────
+export async function fetchStoryInsights(_token: string, storyId: string) {
+  if (env.MOCK_MODE) return { data: [{ name: 'impressions', values: [{ value: 200 }] }, { name: 'reach', values: [{ value: 150 }] }, { name: 'replies', values: [{ value: 5 }] }, { name: 'exits', values: [{ value: 20 }] }] };
+  const metrics = 'impressions,reach,replies,exits';
+  const res = await fetch(`${graphBase}/${storyId}/insights?metric=${metrics}&access_token=${_token}`);
+  return checkResponse(res, `fetchStoryInsights(${storyId})`);
+}
+
+// ─── Account-Level Insights (Daily) ──────────────────────────────────────────
+export async function fetchIgInsights(_token: string, period: string = 'day', days: number = 30) {
+  if (env.MOCK_MODE) return mockInsights(days);
+
+  const since = Math.floor((Date.now() - days * 86400000) / 1000);
+  const until = Math.floor(Date.now() / 1000);
+  // Valid metrics for Instagram API v21+
+  const metrics = 'reach,follower_count,profile_views,accounts_engaged,total_interactions,profile_links_taps';
+  const url = `${graphBase}/me/insights?metric=${metrics}&period=${period}&since=${since}&until=${until}&access_token=${_token}`;
+  const res = await fetch(url);
+  const data = await checkResponse(res, 'fetchIgInsights');
+
+  // Transform the raw API response into the row format our app expects
+  const metricsMap: Record<string, Record<string, number>> = {};
+
+  for (const metric of data.data || []) {
+    for (const val of metric.values || []) {
+      const dateKey = val.end_time?.split('T')[0] || 'unknown';
+      if (!metricsMap[dateKey]) metricsMap[dateKey] = {};
+      metricsMap[dateKey][metric.name] = val.value || 0;
+    }
+  }
+
+  return Object.entries(metricsMap).map(([date, vals]) => ({
+    date,
+    impressions: vals.reach || 0,  // use reach as proxy for impressions
+    reach: vals.reach || 0,
+    profile_views: vals.profile_views || 0,
+    follower_count: vals.follower_count || 0,
+    website_clicks: vals.profile_links_taps || 0,
+    email_contacts: 0  // no longer available
+  }));
+}
+
+// ─── Audience Demographics ───────────────────────────────────────────────────
+export async function fetchAudienceDemographics(_token: string) {
+  if (env.MOCK_MODE) return mockAudienceDemographics();
+
+  const metrics = 'audience_city,audience_country,audience_gender_age';
+  const url = `${graphBase}/me/insights?metric=${metrics}&period=lifetime&access_token=${_token}`;
+  const res = await fetch(url);
+  const data = await checkResponse(res, 'fetchAudienceDemographics');
+
+  const results: { dimension: string; key: string; value: number }[] = [];
+
+  for (const metric of data.data || []) {
+    let dimension = 'unknown';
+    if (metric.name === 'audience_city') dimension = 'city';
+    else if (metric.name === 'audience_country') dimension = 'country';
+    else if (metric.name === 'audience_gender_age') dimension = 'gender_age';
+
+    const values = metric.values?.[0]?.value || {};
+    for (const [key, val] of Object.entries(values)) {
+      results.push({ dimension, key, value: val as number });
+    }
+  }
+
+  return results;
 }
